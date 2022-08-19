@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace LogsInfoClient
 {
@@ -28,5 +28,16 @@ namespace LogsInfoClient
         /// Журналы клиента
         /// </summary>
         public IList<LogInfo> Logs { get; set; }
+
+        public ClientInfo() { }
+
+        public ClientInfo(Guid id) => Id = id;
+
+        /// <summary>
+        /// Получить лог клиента по его имени
+        /// </summary>
+        /// <param name="id">Имя запрашиваемого лога</param>
+        /// <returns>Запрошенный лог</returns>
+        public LogInfo GetLog(string id) => Logs.SingleOrDefault(l => l.Id == id);
     }
 }

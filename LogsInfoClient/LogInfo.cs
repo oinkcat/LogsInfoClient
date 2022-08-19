@@ -33,5 +33,20 @@ namespace LogsInfoClient
         /// Загружены ли подробности
         /// </summary>
         public bool DetailsLoaded => LastEntryDate > DateTime.MinValue;
+
+        /// <summary>
+        /// Создать из статистической информации, переданной от службы
+        /// </summary>
+        /// <param name="dto">Информация, полученная от службы логов</param>
+        /// <returns>Информация о логе</returns>
+        public static LogInfo CreateFromDto(LogStatsDto dto) => new LogInfo(dto.LogId)
+        {
+            EntriesCount = dto.EntriesCount,
+            LastEntryDate = dto.LastEntryDate
+        };
+
+        public LogInfo() { }
+
+        public LogInfo(string id) => Id = id;
     }
 }
