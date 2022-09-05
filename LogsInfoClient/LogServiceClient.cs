@@ -37,12 +37,20 @@ namespace LogsInfoClient
         {
             ThrowIfNoAdminToken();
 
-            var svcClient = new WebClient();
-
             string clientInfoUrl = $"{BaseApiUrl}/Clients?token={AdminApiToken}";
+
+            var svcClient = new WebClient();
             string clientsJson = await svcClient.DownloadStringTaskAsync(clientInfoUrl);
 
             return JsonConvert.DeserializeObject<List<ClientInfo>>(clientsJson);
+        }
+
+        private void ThrowIfNoAdminToken()
+        {
+            if (String.IsNullOrWhiteSpace(AdminApiToken))
+            {
+                throw new ArgumentException(nameof(AdminApiToken));
+            }
         }
 
         /// <summary>
@@ -78,7 +86,6 @@ namespace LogsInfoClient
             string postUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}";
 
             var svcClient = new WebClient();
-
             svcClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
 
             string messageToPost = String.Concat('"', message, '"');
@@ -94,12 +101,38 @@ namespace LogsInfoClient
             }
         }
 
-        private void ThrowIfNoAdminToken()
+        /// <summary>
+        /// Получить записи лога постранично
+        /// </summary>
+        /// <param name="client">Клиент службы логирования</param>
+        /// <param name="log">Лог для получения сообщений</param>
+        /// <param name="page">Страница для получения сообщений</param>
+        /// <returns>Список сообщений на странице</returns>
+        public async Task<List<LogEntry>> GetEntries(ClientInfo client, LogInfo log, int page)
         {
-            if (String.IsNullOrWhiteSpace(AdminApiToken))
-            {
-                throw new ArgumentException(nameof(AdminApiToken));
-            }
+            string messagesUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}/p/{page}";
+
+            var svcClient = new WebClient();
+            string messagesJson = await svcClient.DownloadStringTaskAsync(messagesUrl);
+
+            return JsonConvert.DeserializeObject<List<LogEntry>>(messagesJson);
+        }
+
+        /// <summary>
+        /// Получить запись лога по идентификатору
+        /// </summary>
+        /// <param name="client">Клиент службы логирования</param>
+        /// <param name="log">Лог для получения сообщений</param>
+        /// <param name="entryId">Идентификатор записи</param>
+        /// <returns>Сообщение лога с заданным идентификатором</returns>
+        public async Task<LogEntry> GetEntry(ClientInfo client, LogInfo log, int entryId)
+        {
+            string messageUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}/id/{entryId}";
+
+            var svcClient = new WebClient();
+            string messageJson = await svcClient.DownloadStringTaskAsync(messageUrl);
+
+            return JsonConvert.DeserializeObject<LogEntry>(messageJson);
         }
     }
 }

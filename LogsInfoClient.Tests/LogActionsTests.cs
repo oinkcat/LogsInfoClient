@@ -65,6 +65,40 @@ namespace LogsInfoClient.Tests
             Assert.True(logResult);
         }
 
+        /// <summary>
+        /// “естирование получени€ сообщений постранично
+        /// </summary>
+        [Fact]
+        public async Task TestRetrieveLogEntriesPaged()
+        {
+            var logsClient = CreateClient();
+
+            var client = new ClientInfo(Guid.Parse(TestClientId));
+            var logInfo = new LogInfo(TestLogId);
+
+            var messages = await logsClient.GetEntries(client, logInfo, 0);
+
+            Assert.NotEmpty(messages);
+        }
+
+        /// <summary>
+        /// “естирование получени€ последнего сообщени€ в логе
+        /// </summary>
+        [Fact]
+        public async Task TestRetrieveLastMessage()
+        {
+            var logsClient = CreateClient();
+
+            var client = new ClientInfo(Guid.Parse(TestClientId));
+            var logInfo = await logsClient.GetLogInfo(client, TestLogId);
+
+            int lastEntryId = logInfo.EntriesCount;
+            var lastEntry = await logsClient.GetEntry(client, logInfo, lastEntryId);
+
+            Assert.NotNull(lastEntry);
+            Assert.Equal(lastEntryId, lastEntry.Id);
+        }
+
         private LogServiceClient CreateClient() => new LogServiceClient(LogServiceUrl)
         {
             AdminApiToken = AdminToken
