@@ -9,7 +9,7 @@ namespace LogsInfoClient.Tests
     /// </summary>
     public class LogActionsTests
     {
-        private const string LogServiceUrl = "http://myiotlogs.somee.com";
+        private const string LogServiceUrl = "http://localhost:5000";
 
         private const string AdminToken = "admin";
 

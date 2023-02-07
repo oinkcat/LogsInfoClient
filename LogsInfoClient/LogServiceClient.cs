@@ -4,6 +4,8 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Linq;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace LogsInfoClient
 {
@@ -12,6 +14,8 @@ namespace LogsInfoClient
     /// </summary>
     public class LogServiceClient
     {
+        private const int DefaultTimeoutSeconds = 5;
+
         /// <summary>
         /// Адрес службы логов
         /// </summary>
@@ -21,6 +25,11 @@ namespace LogsInfoClient
         /// Ключ API для запросов администратора
         /// </summary>
         public string AdminApiToken { get; set; }
+
+        /// <summary>
+        /// Таймаут запроса
+        /// </summary>
+        public int RequestTimeoutSeconds { get; set; } = DefaultTimeoutSeconds;
 
         private string BaseApiUrl => $"{ServiceAddress.TrimEnd('/')}/api";
 
@@ -37,10 +46,10 @@ namespace LogsInfoClient
         {
             ThrowIfNoAdminToken();
 
-            string clientInfoUrl = $"{BaseApiUrl}/Clients?token={AdminApiToken}";
+            string clientInfoUri = $"api/Clients?token={AdminApiToken}";
 
-            var svcClient = new WebClient();
-            string clientsJson = await svcClient.DownloadStringTaskAsync(clientInfoUrl);
+            var svcClient = CreateHttpClient();
+            string clientsJson = await svcClient.GetStringAsync(clientInfoUri);
 
             return JsonConvert.DeserializeObject<List<ClientInfo>>(clientsJson);
         }
@@ -61,10 +70,10 @@ namespace LogsInfoClient
         /// <returns>Информация о логе</returns>
         public async Task<LogInfo> GetLogInfo(ClientInfo client, string logId)
         {
-            string logInfoUrl = $"{BaseApiUrl}/Logging/{client.Id}";
+            string logInfoUrl = $"api/Logging/{client.Id}";
 
-            var svcClient = new WebClient();
-            string clientLogsJson = await svcClient.DownloadStringTaskAsync(logInfoUrl);
+            var svcClient = CreateHttpClient();
+            string clientLogsJson = await svcClient.GetStringAsync(logInfoUrl);
 
             var logStats = JsonConvert.DeserializeObject<LogStatsDto[]>(clientLogsJson)
                 .FirstOrDefault(ls => ls.LogId.Equals(logId));
@@ -83,17 +92,17 @@ namespace LogsInfoClient
         /// <returns>Успешность отправки сообщения</returns>
         public async Task<bool> PostLogMessage(ClientInfo client, LogInfo log, string message)
         {
-            string postUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}";
+            string postUrl = $"api/Logging/{client.Id}/{log.Id}";
 
-            var svcClient = new WebClient();
-            svcClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
-
-            string messageToPost = String.Concat('"', message, '"');
+            var svcClient = CreateHttpClient();
+            var jsonContent = new StringContent($"\"{message}\"");
+            jsonContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             try
             {
-                string answer = await svcClient.UploadStringTaskAsync(postUrl, messageToPost);
-                return bool.Parse(answer);
+                var answer = await svcClient.PostAsync(postUrl, jsonContent);
+                return (answer.StatusCode == HttpStatusCode.OK) &&
+                       bool.Parse(await answer.Content.ReadAsStringAsync());
             }
             catch (WebException)
             {
@@ -110,10 +119,10 @@ namespace LogsInfoClient
         /// <returns>Список сообщений на странице</returns>
         public async Task<List<LogEntry>> GetEntries(ClientInfo client, LogInfo log, int page)
         {
-            string messagesUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}/p/{page}";
+            string messagesUrl = $"api/Logging/{client.Id}/{log.Id}/p/{page}";
 
-            var svcClient = new WebClient();
-            string messagesJson = await svcClient.DownloadStringTaskAsync(messagesUrl);
+            var svcClient = CreateHttpClient();
+            string messagesJson = await svcClient.GetStringAsync(messagesUrl);
 
             return JsonConvert.DeserializeObject<List<LogEntry>>(messagesJson);
         }
@@ -127,12 +136,22 @@ namespace LogsInfoClient
         /// <returns>Сообщение лога с заданным идентификатором</returns>
         public async Task<LogEntry> GetEntry(ClientInfo client, LogInfo log, int entryId)
         {
-            string messageUrl = $"{BaseApiUrl}/Logging/{client.Id}/{log.Id}/id/{entryId}";
+            string messageUrl = $"api/Logging/{client.Id}/{log.Id}/id/{entryId}";
 
-            var svcClient = new WebClient();
-            string messageJson = await svcClient.DownloadStringTaskAsync(messageUrl);
+            var svcClient = CreateHttpClient();
+            string messageJson = await svcClient.GetStringAsync(messageUrl);
 
             return JsonConvert.DeserializeObject<LogEntry>(messageJson);
+        }
+
+        // Создать клиент HTTP доступа
+        private HttpClient CreateHttpClient()
+        {
+            return new HttpClient
+            {
+                BaseAddress = new Uri(ServiceAddress),
+                Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds)
+            };
         }
     }
 }
