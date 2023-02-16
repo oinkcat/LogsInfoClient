@@ -31,8 +31,6 @@ namespace LogsInfoClient
         /// </summary>
         public int RequestTimeoutSeconds { get; set; } = DefaultTimeoutSeconds;
 
-        private string BaseApiUrl => $"{ServiceAddress.TrimEnd('/')}/api";
-
         public LogServiceClient(string serviceUrl)
         {
             ServiceAddress = serviceUrl;
@@ -117,9 +115,10 @@ namespace LogsInfoClient
         /// <param name="log">Лог для получения сообщений</param>
         /// <param name="page">Страница для получения сообщений</param>
         /// <returns>Список сообщений на странице</returns>
-        public async Task<List<LogEntry>> GetEntries(ClientInfo client, LogInfo log, int page)
+        public async Task<List<LogEntry>> GetEntries(ClientInfo client, LogInfo log, int page = -1)
         {
-            string messagesUrl = $"api/Logging/{client.Id}/{log.Id}/p/{page}";
+            string pageQuerySuffix = (page > -1) ? page.ToString() : String.Empty;
+            string messagesUrl = $"api/Logging/{client.Id}/{log.Id}/p/{pageQuerySuffix}";
 
             var svcClient = CreateHttpClient();
             string messagesJson = await svcClient.GetStringAsync(messagesUrl);
@@ -134,9 +133,10 @@ namespace LogsInfoClient
         /// <param name="log">Лог для получения сообщений</param>
         /// <param name="entryId">Идентификатор записи</param>
         /// <returns>Сообщение лога с заданным идентификатором</returns>
-        public async Task<LogEntry> GetEntry(ClientInfo client, LogInfo log, int entryId)
+        public async Task<LogEntry> GetEntry(ClientInfo client, LogInfo log, int entryId = -1)
         {
-            string messageUrl = $"api/Logging/{client.Id}/{log.Id}/id/{entryId}";
+            string entryIdSuffix = (entryId > -1) ? entryId.ToString() : String.Empty;
+            string messageUrl = $"api/Logging/{client.Id}/{log.Id}/id/{entryIdSuffix}";
 
             var svcClient = CreateHttpClient();
             string messageJson = await svcClient.GetStringAsync(messageUrl);
@@ -145,13 +145,10 @@ namespace LogsInfoClient
         }
 
         // Создать клиент HTTP доступа
-        private HttpClient CreateHttpClient()
+        private HttpClient CreateHttpClient() => new HttpClient
         {
-            return new HttpClient
-            {
-                BaseAddress = new Uri(ServiceAddress),
-                Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds)
-            };
-        }
+            BaseAddress = new Uri(ServiceAddress),
+            Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds)
+        };
     }
 }

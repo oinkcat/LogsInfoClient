@@ -99,6 +99,39 @@ namespace LogsInfoClient.Tests
             Assert.Equal(lastEntryId, lastEntry.Id);
         }
 
+        /// <summary>
+        /// Тестирование получения последнего сообщения в логе новым способом
+        /// </summary>
+        [Fact]
+        public async Task TestRetrieveLastMessageNew()
+        {
+            var logsClient = CreateClient();
+
+            var client = new ClientInfo(Guid.Parse(TestClientId));
+            var logInfo = await logsClient.GetLogInfo(client, TestLogId);
+
+            var lastEntry = await logsClient.GetEntry(client, logInfo);
+
+            Assert.NotNull(lastEntry);
+            Assert.Equal(logInfo.EntriesCount, lastEntry.Id);
+        }
+
+        /// <summary>
+        /// Тестирование получения содержимого последней страницы новым способом
+        /// </summary>
+        [Fact]
+        public async Task TestRetrieveLastPage()
+        {
+            var logsClient = CreateClient();
+
+            var client = new ClientInfo(Guid.Parse(TestClientId));
+            var logInfo = await logsClient.GetLogInfo(client, TestLogId);
+
+            var lastPageEntries = await logsClient.GetEntries(client, logInfo);
+
+            Assert.NotEmpty(lastPageEntries);
+        }
+
         private LogServiceClient CreateClient() => new LogServiceClient(LogServiceUrl)
         {
             AdminApiToken = AdminToken
