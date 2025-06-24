@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -130,6 +131,29 @@ namespace LogsInfoClient.Tests
             var lastPageEntries = await logsClient.GetEntries(client, logInfo);
 
             Assert.NotEmpty(lastPageEntries);
+        }
+
+        /// <summary>
+        /// Тестирование получения индекса страницы по дате сообщения
+        /// </summary>
+        [Fact]
+        public async Task TestGetPageIndexForDate()
+        {
+            const string TestDateWithMessages = "2023-03-15";
+            const string TestDateWithoutMessages = "2099-12-31";
+
+            var logsClient = CreateClient();
+            var client = new ClientInfo(Guid.Parse(TestClientId));
+            var logInfo = await logsClient.GetLogInfo(client, TestLogId);
+
+            var date1 = DateTime.Parse(TestDateWithMessages);
+            int? pageForTestDate1 = await logsClient.GetPageIndexForDate(client, logInfo, date1);
+
+            var date2 = DateTime.Parse(TestDateWithoutMessages);
+            int? pageForTestDate2 = await logsClient.GetPageIndexForDate(client, logInfo, date2);
+
+            Assert.True(pageForTestDate1.HasValue);
+            Assert.False(pageForTestDate2.HasValue);
         }
 
         private LogServiceClient CreateClient() => new LogServiceClient(LogServiceUrl)

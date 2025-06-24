@@ -7,7 +7,7 @@ namespace LogsInfoClient
     /// <summary>
     /// Объект передачи данных о статистике лога
     /// </summary>
-    public class LogStatsDto
+    internal class LogStatsDto
     {
         public string LogId { get; set; }
 
