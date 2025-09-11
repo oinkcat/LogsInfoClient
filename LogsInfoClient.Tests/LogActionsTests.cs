@@ -46,6 +46,7 @@ namespace LogsInfoClient.Tests
             Assert.Equal(TestLogId, logInfo.Id);
             Assert.True(logInfo.DetailsLoaded);
             Assert.NotEqual(0, logInfo.EntriesCount);
+            Assert.NotEmpty(logInfo.CommandNames);
         }
 
         /// <summary>

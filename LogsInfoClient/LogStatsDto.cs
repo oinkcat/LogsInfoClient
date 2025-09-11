@@ -14,5 +14,7 @@ namespace LogsInfoClient
         public int EntriesCount { get; set; }
 
         public DateTime LastEntryDate { get; set; }
+
+        public string[] CommandNames { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LogsInfoClient
@@ -30,6 +31,11 @@ namespace LogsInfoClient
         public DateTime LastEntryDate { get; set; }
 
         /// <summary>
+        /// Доступные для выполнения команды
+        /// </summary>
+        public (string, int)[] CommandNames { get; set; }
+
+        /// <summary>
         /// Загружены ли подробности
         /// </summary>
         public bool DetailsLoaded => LastEntryDate > DateTime.MinValue;
@@ -42,7 +48,13 @@ namespace LogsInfoClient
         internal static LogInfo CreateFromDto(LogStatsDto dto) => new LogInfo(dto.LogId)
         {
             EntriesCount = dto.EntriesCount,
-            LastEntryDate = dto.LastEntryDate
+            LastEntryDate = dto.LastEntryDate,
+            CommandNames = dto.CommandNames
+                .Select(cmd => {
+                    string[] cmdParts = cmd.Split('/');
+                    return (cmdParts[0], int.Parse(cmdParts[1]));
+                })
+                .ToArray()
         };
 
         public LogInfo() { }
