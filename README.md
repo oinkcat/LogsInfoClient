@@ -1,3 +1,3 @@
-# LogsInfoClient
+п»ї# LogsInfoClient
 
-Клиентская библиотека-интерфейс к @oinkcat/LogsInfo
+РљР»РёРµРЅС‚СЃРєР°СЏ Р±РёР±Р»РёРѕС‚РµРєР°-РёРЅС‚РµСЂС„РµР№СЃ Рє @oinkcat/LogsInfo
